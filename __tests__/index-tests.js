@@ -17,11 +17,20 @@ const rootReducer = (state = {}, action) => ({counter: counterReducer(state.coun
 const rootReducerImmutable = (state = Map(), action) => Map({counter: counterReducer(state.get('counter'), action)});
 const makeAction = (type, metaType, id) => ({type, meta: {optimistic: {type: metaType, id}}});
 
+const compareReducer = (t, actual, expected) => {
+  const {
+    isReady,
+    ...actualRest
+  } = actual;
+  t.deepEqual(actualRest, expected);
+  t.true(typeof isReady === 'number');
+}
+
 /*Meta tests*/
 test('test rootReducer works OK', t => {
   const actual = rootReducer(undefined, {});
   const expected = {counter: 0};
-  t.same(actual, expected)
+  t.deepEqual(actual, expected)
 });
 
 test('test rootReducerImmutable works OK', t => {
@@ -39,7 +48,7 @@ test('wraps a reducer', t => {
     history: List(),
     current: {counter: 0}
   });
-  t.same(actual.toJS(), expected.toJS());
+  compareReducer(t, actual.toJS(), expected.toJS());
 });
 
 test('wraps a reducer with existing state', t => {
@@ -50,7 +59,7 @@ test('wraps a reducer with existing state', t => {
     history: List(),
     current: {counter: 5}
   });
-  t.same(actual.toJS(), expected.toJS());
+  compareReducer(t, actual.toJS(), expected.toJS());
 });
 
 test('wraps an immutable reducer', t => {
@@ -61,7 +70,7 @@ test('wraps an immutable reducer', t => {
     history: List(),
     current: Map({counter: 0})
   });
-  t.same(actual.toJS(), expected.toJS());
+  compareReducer(t, actual.toJS(), expected.toJS());
 });
 
 /*BEGIN*/
@@ -74,7 +83,7 @@ test('begin a transaction', t => {
     history: List.of(action),
     current: {counter: 1}
   });
-  t.same(actual.toJS(), expected.toJS());
+  compareReducer(t, actual.toJS(), expected.toJS());
 });
 
 test('begin a second transaction', t => {
@@ -88,7 +97,7 @@ test('begin a second transaction', t => {
     history: List.of(begin0, begin1),
     current: {counter: 2}
   });
-  t.same(actual.toJS(), expected.toJS());
+  compareReducer(t, actual.toJS(), expected.toJS());
 });
 
 test('begin a transaction, add a non-opt', t => {
@@ -102,7 +111,7 @@ test('begin a transaction, add a non-opt', t => {
     history: List.of(begin0, nonOpt0),
     current: {counter: 0}
   });
-  t.same(actual.toJS(), expected.toJS());
+  compareReducer(t, actual.toJS(), expected.toJS());
 });
 
 test('begin 2, add non-opt', t => {
@@ -118,7 +127,7 @@ test('begin 2, add non-opt', t => {
     history: List.of(begin0, begin1, nonOpt0),
     current: {counter: 1}
   });
-  t.same(actual.toJS(), expected.toJS());
+  compareReducer(t, actual.toJS(), expected.toJS());
 });
 
 
@@ -134,7 +143,7 @@ test('immediately commit a transaction', t => {
     history: List(),
     current: {counter: 1}
   });
-  t.same(actual.toJS(), expected.toJS());
+  compareReducer(t, actual.toJS(), expected.toJS());
 });
 
 test('begin 2, commit the first', t => {
@@ -150,7 +159,7 @@ test('begin 2, commit the first', t => {
     history: List.of(begin1, commit0),
     current: {counter: 2}
   });
-  t.same(actual.toJS(), expected.toJS());
+  compareReducer(t, actual.toJS(), expected.toJS());
 });
 
 test('begin 2, add non-opt action, commit the first', t => {
@@ -168,7 +177,7 @@ test('begin 2, add non-opt action, commit the first', t => {
     history: List.of(begin1, nonOpt0, commit0),
     current: {counter: 1}
   });
-  t.same(actual.toJS(), expected.toJS());
+  compareReducer(t, actual.toJS(), expected.toJS());
 });
 
 /*REVERT*/
@@ -183,7 +192,7 @@ test('immediately revert a transaction', t => {
     history: List(),
     current: {counter: 0}
   });
-  t.same(actual.toJS(), expected.toJS());
+  compareReducer(t, actual.toJS(), expected.toJS());
 });
 
 test('begin 2, revert the second', t => {
@@ -199,7 +208,7 @@ test('begin 2, revert the second', t => {
     history: List.of(begin0, revert0),
     current: {counter: 1}
   });
-  t.same(actual.toJS(), expected.toJS());
+  compareReducer(t, actual.toJS(), expected.toJS());
 });
 
 test('begin 2, revert the first', t => {
@@ -215,7 +224,7 @@ test('begin 2, revert the first', t => {
     history: List.of(begin1, revert0),
     current: {counter: 1}
   });
-  t.same(actual.toJS(), expected.toJS());
+  compareReducer(t, actual.toJS(), expected.toJS());
 });
 
 test('begin 2, revert the first, then the second', t => {
@@ -233,7 +242,7 @@ test('begin 2, revert the first, then the second', t => {
     history: List(),
     current: {counter: 0}
   });
-  t.same(actual.toJS(), expected.toJS());
+  compareReducer(t, actual.toJS(), expected.toJS());
 });
 
 test('begin 1, add non-opt, revert it', t => {
@@ -249,7 +258,7 @@ test('begin 1, add non-opt, revert it', t => {
     history: List(),
     current: {counter: -1}
   });
-  t.same(actual.toJS(), expected.toJS());
+  compareReducer(t, actual.toJS(), expected.toJS());
 });
 
 test('begin 2, add non-opt, revert first', t => {
@@ -267,7 +276,7 @@ test('begin 2, add non-opt, revert first', t => {
     history: List.of(begin1,nonOpt0, revert0),
     current: {counter: 0}
   });
-  t.same(actual.toJS(), expected.toJS());
+  compareReducer(t, actual.toJS(), expected.toJS());
 });
 
 test('begin 2, add non-opt, revert the first, commit the second', t => {
@@ -287,7 +296,7 @@ test('begin 2, add non-opt, revert the first, commit the second', t => {
     history: List(),
     current: {counter: 0}
   });
-  t.same(actual.toJS(), expected.toJS());
+  compareReducer(t, actual.toJS(), expected.toJS());
 });
 
 test('revert and commit have an extra DEC', t => {
@@ -307,7 +316,7 @@ test('revert and commit have an extra DEC', t => {
     history: List(),
     current: {counter: -2}
   });
-  t.same(actual.toJS(), expected.toJS());
+  compareReducer(t, actual.toJS(), expected.toJS());
 });
 
 test('real world', t => {
@@ -335,5 +344,5 @@ test('real world', t => {
     history: List(),
     current: {counter: -2}
   });
-  t.same(actual.toJS(), expected.toJS());
+  compareReducer(t, actual.toJS(), expected.toJS());
 });
